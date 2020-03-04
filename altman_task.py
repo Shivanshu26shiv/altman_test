@@ -30,11 +30,51 @@ def parse_equity_urls(url, sublink_flag=0):
     if not hash_char_absent:
         # print('url-hash_char_absent:', url, hash_char_absent)
         try:
-            
+
+            if sublink_flag == 2:
+                flag = 0
+                for _ in [name_list, position_list]:
+                    for __ in _:
+                        try:
+                            element = driver.find_element_by_class_name(__).text
+                            print('element:', element)
+                            flag = 1
+                            break
+                        except:
+                            # print(__, 'class not found', url)
+                            continue
+                        '''    
+                        if flag == 0:
+                            print('new:', 'http://'+url+sub_link)
+                            # parse_equity_urls('http://'+url+sub_link, 2)
+                        '''
+                for _ in [bio_list]:
+                    for __ in _:
+                        if __ == 'markdown':
+                            try:
+                                elements = driver.find_elements_by_class_name(__)
+                                for ___ in elements:
+                                    print('markdowns:', ___.text)
+                            except:
+                                print(__, 'class not found', url)
+                                continue
+                        else:
+                            try:
+                                element = driver.find_element_by_class_name(__).text
+                                print('element:', element)
+                                flag = 1
+                                break
+                            except:
+                                # print(__, 'class not found', url)
+                                continue
+
+                        
             for a in driver.find_elements_by_xpath('.//a'):
                 link = a.get_attribute('href')
                 link = link.split('://')[-1]
                 link = link.rstrip('/')
+                if link[:3] != 'www':
+                    link = 'www.'+link
                 
                 hash_char_absent = link.split('/')[-1].count('#')
                 if hash_char_absent:
@@ -46,15 +86,20 @@ def parse_equity_urls(url, sublink_flag=0):
                         continue
 
                 try:
-                    if len(list(set(link.split(url)))) > 1:
-                        sub_link = list(set(link.split(url)))[-1]
+                    sub_link = ''
+                    temp = list(set(link.split(url)))
+                    if len(temp) > 1:
+                        sub_link = temp[-1]
                         # print('sub_link:', sub_link)
                     else:
+                        print('link_0:', link)
                         continue
                 except AttributeError:
                     continue
 
                 print('sub_link:', sub_link)
+                if sub_link in ['/extended-network']:
+                    continue
                 
                 if sublink_flag == 0:
                     
@@ -65,7 +110,7 @@ def parse_equity_urls(url, sublink_flag=0):
                     for _ in team_strings:
                         if parsed_sub_link.count(_):
                             print('team_link:', link)
-                            parse_equity_urls(link, 1)                        
+                            parse_equity_urls('http://'+link, 1)                        
                             break
                         
                 elif sublink_flag == 1:
@@ -75,17 +120,6 @@ def parse_equity_urls(url, sublink_flag=0):
                         print('link:', link)
                         parse_equity_urls('http://'+link, 2)
 
-                elif sublink_flag == 2:
-
-                    for _ in [name_list, position_list, bio_list]:
-                        for __ in _:
-                            try:
-                                element = driver.find_element_by_class_name(__).text
-                                print('element:', element)
-                                break
-                            except:
-                                print(__, 'class not found')
-                                continue
 
             # if not returned before then return 0
             return 0
@@ -95,9 +129,9 @@ def parse_equity_urls(url, sublink_flag=0):
 
 try:
     team_strings = ['team', 'people']
-    name_list = ['name']
-    position_list = ['position']
-    bio_list = ['bio']
+    name_list = ['name', 'person-name', 'bio-right']
+    position_list = ['position', 'person-title', 'bio-right']
+    bio_list = ['bio', 'markdown', 'content-right-wide']
     team_dict={}
 
     '''
@@ -112,7 +146,7 @@ try:
     print('team_dict:', team_dict)
     '''
 
-    parse_equity_urls('https://www.cinven.com', 0)
+    parse_equity_urls('http://www.hf.com', 0)
 
 finally:
     print('\nExecution done!')
